@@ -1,0 +1,28 @@
+---
+title: "PSTAT 100 Final Project - Fertility and Infant Mortality 2010 - Present"
+author: "Arthur Kim and Wesley Kim"
+date: "March 8th, 2025"
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+This project investigates fertility and infant mortality trends in the United States 
+
+## Question of Interest
+Throughout this report, we will be diving into the question: What demographic factors are most predictive of high infant mortality rates within the states?
+
+### Sub-Questions
+- Sub-question 1  
+- Sub-question 2  
+
+## Variable Descriptions
+- Variable 1: Description  
+- Variable 2: Description 

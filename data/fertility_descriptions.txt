@@ -1,0 +1,78 @@
+Births and population by state 2016-2023.  Fertility rates are typically described in units of births per 1000 women per year. The US fertility rate is about 55 births / 1000 women age 15-44 per year
+
+
+Note: The CDC drops counts between 1 and 9 inclusive and replaced with NA for privacy reasons. Some information can (hopefully still) be found here: https://www.cdc.gov/nchs/pressroom/sosmap/fertility_rate/fertility_rates.htm
+
+state: 51 states and DC
+year: Calendar year of the data
+bmcode: Bimonthly code.  Data is aggregated into 2 month chunks.  1 means January 1 through end of Feb.  6 corresponds to data from November-December.
+time: Time period indicator
+start_date: Starting date of the observation period
+end_date: Ending date of the observation period
+
+Birth Statistics by Demographics:
+Age:
+
+births_age1524: Births to mothers aged 15-24
+births_age2534: Births to mothers aged 25-34
+births_age3544: Births to mothers aged 35-44
+
+Education:
+
+births_nohs: Births to mothers without high school education
+births_hs: Births to mothers with high school education
+births_somecoll: Births to mothers with some college education
+births_coll: Births to mothers with college degree
+
+Marital Status:
+
+births_married: Births to married mothers
+births_unmarried: Births to unmarried mothers
+
+Insurance Status:
+
+births_medicaid: Births covered by Medicaid
+births_nonmedicaid: Births not covered by Medicaid
+
+Race/Ethnicity:
+
+births_nhblack: Births to non-Hispanic Black mothers
+births_nhwhite: Births to non-Hispanic White mothers
+births_hisp: Births to Hispanic mothers
+births_otherraceeth: Births to mothers of other races/ethnicities
+births_total: Total births across all categories
+
+Population Statistics:
+Total Population:
+
+pop_total: Total population in the area
+
+By Race/Ethnicity:
+
+pop_nhblack: population of Non-Hispanic Black women age 15-44
+pop_nhwhite: population Non-Hispanic White women age 15-44
+pop_hisp: population of Hispanic women age 15-54 population
+pop_otherraceeth: Other races/ethnicities women age 15-54 population
+
+By Insurance:
+
+pop_medicaid: Population covered by Medicaid (women age 15-54 population)
+pop_nonmedicaid: Population not covered by Medicaid (women age 15-54 population)
+
+By Education:
+
+pop_nohs: Population without high school education (women age 15-54 population)
+pop_hs: Population with high school education (women age 15-54 population)
+pop_somecoll: Population with some college education (women age 15-54 population)
+pop_coll: Population with college degree (women age 15-54 population)
+
+By Marital Status:
+
+pop_married: Married population (women age 15-54 population)
+pop_unmarried: Unmarried population (women age 15-54 population)
+
+By Age:
+
+pop_age1524: Population aged 15-24 (women age 15-54 population)
+pop_age2534: Population aged 25-34 (women age 15-54 population)
+pop_age3544: Population aged 35-44 (women age 15-54 population)

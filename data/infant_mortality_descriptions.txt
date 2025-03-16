@@ -1,0 +1,25 @@
+Infant mortality data and births by category from 2003-2023.  Infant mortality rates are typically described in units of infant deaths per 1,000 live births, e.g. the total infant mortality rate would be deaths_total/births_total*1000.  The total infant mortality rate in the US is close to 5.6 per 1000 births.
+
+Note: The CDC drops counts between 1 and 9 inclusive and replaced with NA for privacy reasons. Some information can (hopefully still) be found here: https://www.cdc.gov/maternal-infant-health/infant-mortality/index.html
+
+Geographic/Time Variables:
+- state: Two-letter state abbreviation identifier
+- year: Calendar year of the data
+- bacode: Biannual code.  1 means data aggregated from January 1 through June 30, 2 means data from July 1 through December 31.
+
+Birth counts
+- births_nhblack: Number of births to non-Hispanic Black mothers
+- births_nhwhite: Number of births to non-Hispanic White mothers
+- births_hisp: Number of births to Hispanic mothers of any race
+- births_otherraceeth: Number of births to mothers of other races/ethnicities
+- births_total: Total number of births across all racial/ethnic groups
+
+Infant death counts
+- deaths_nhblack: Number of deaths among non-Hispanic Black population
+- deaths_nhwhite: Number of deaths among non-Hispanic White population
+- deaths_hisp: Number of deaths among Hispanic population of any race
+- deaths_otherraceeth: Number of deaths among other racial/ethnic groups
+- deaths_con: Number of congenital-related deaths (present at birth)
+- deaths_noncon: Number of non-congenital deaths
+- deaths_neo: Number of neonatal deaths (within first 28 days of life)
+- deaths_total: Total number of deaths across all categories
