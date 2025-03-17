@@ -38,8 +38,8 @@ Throughout this report, we will be diving into the question: What demographic fa
 
 ## Data Analysis
 ```{r}
-mortality <- read_csv('data/infant_mortality_biannual_data.csv')
-fertility <- read_csv('data/fertility_data.csv')
+mortality <- read_csv('data/infant_mortality_biannual_data.csv', show_col_types = FALSE)
+fertility <- read_csv('data/fertility_data.csv', show_col_types = FALSE)
 
 fertility_agg <- fertility %>%
   group_by(state, year, group = case_when(
@@ -53,8 +53,6 @@ fertility_agg <- fertility %>%
   ) %>%
   mutate(bacode = ifelse(group == "H1", 1, 2)) %>%  # Assign bacode after aggregation
   select(-group)  # Remove temporary grouping variable
-
-
 
 data <- mortality %>%
   inner_join(fertility_agg, by = c("state", "year", "bacode"), 
@@ -78,29 +76,42 @@ data <- data %>%
     IMR_nhwhite = (deaths_nhwhite / births_nhwhite) * 1000,
     IMR_hisp = (deaths_hisp / births_hisp) * 1000,
     IMR_otherraceeth = (deaths_otherraceeth / births_otherraceeth) * 1000,
-    IMR_total = (deaths_total / births_total) * 1000
+    IMR_total = (deaths_total / births_total) * 1000, 
+    FR_nhblack = (births_nhblack / pop_nhblack) * 1000,
+    FR_nhwhite = (births_nhwhite / pop_nhwhite) * 1000,
+    FR_hisp = (births_hisp / pop_hisp) * 1000,
+    FR_otherraceeth = (births_otherraceeth / pop_otherraceeth) * 1000,
+    FR_total = (births_total / pop_total) * 1000,
+    prop_married = births_married / births_total,
+    prop_college = (births_coll + births_somecoll) / births_total,
+    prop_medicaid = births_medicaid / births_total,
+    pct_births_age1524 = births_age1524 / births_total,
+    pct_births_age2534 = births_age2534 / births_total,
+    pct_births_age3544 = births_age3544 / births_total
   )
 
 data
 ```
 
+
+
 ```{r}
-data_long <- data %>%
+# Pivot IMR data to long format
+IMR_long <- data %>%
   pivot_longer(cols = starts_with("IMR_"), 
                names_to = "Ethnicity", 
-               values_to = "IMR")
+               values_to = "IMR") %>%
+  mutate(Ethnicity = case_when(
+    Ethnicity == "IMR_nhblack" ~ "Non-Hispanic Black",
+    Ethnicity == "IMR_nhwhite" ~ "Non-Hispanic White",
+    Ethnicity == "IMR_hisp" ~ "Hispanic",
+    Ethnicity == "IMR_otherraceeth" ~ "Other Races/Ethnicities",
+    Ethnicity == "IMR_total" ~ "Total",
+    TRUE ~ Ethnicity  # Keeps any unexpected values unchanged
+  ))
 
-# Rename Ethnicity labels for clarity
-data_long$Ethnicity <- recode(data_long$Ethnicity,
-  "IMR_nhblack" = "Non-Hispanic Black",
-  "IMR_nhwhite" = "Non-Hispanic White",
-  "IMR_hisp" = "Hispanic",
-  "IMR_otherraceeth" = "Other Races/Ethnicities",
-  "IMR_total" = "Total"
-)
-
-# Create scatter plot
-ggplot(data_long, aes(x = Ethnicity, y = IMR)) +
+# Create scatter plot for IMR by Ethnicity
+ggplot(IMR_long, aes(x = Ethnicity, y = IMR)) +
   geom_jitter(width = 0.2, alpha = 0.7, color = "blue") +  # Jitter to avoid overlapping points
   labs(title = "Infant Mortality Rates by Ethnicity",
        x = "Ethnicity",
@@ -108,16 +119,95 @@ ggplot(data_long, aes(x = Ethnicity, y = IMR)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 15, hjust = 1))
 ```
+```{r}
+library(patchwork)
+
+p1 <- ggplot(data, aes(x = pct_births_age1524, y = IMR_total)) +
+  geom_point(color = "darkgreen", alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Age 15-24", x = "Proportion of Births", y = "IMR") +
+  theme_minimal()
+
+# Plot for 25-34
+p2 <- ggplot(data, aes(x = pct_births_age2534, y = IMR_total)) +
+  geom_point(color = "steelblue", alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Age 25-34", x = "Proportion of Births", y = "IMR") +
+  theme_minimal()
+
+# Plot for 35-44
+p3 <- ggplot(data, aes(x = pct_births_age3544, y = IMR_total)) +
+  geom_point(color = "purple", alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Age 35-44", x = "Proportion of Births", y = "IMR") +
+  theme_minimal()
+
+p1 / p2 / p3
+```
+
+
+```{r}
+# Scatter plot: Proportion of Married Women vs. Infant Mortality Rate
+ggplot(data, aes(x = prop_married, y = IMR_total)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Relationship Between Marriage Rate and Infant Mortality Rate",
+       x = "Proportion of Married Women",
+       y = "Infant Mortality Rate (per 1,000 births)") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+```
+
+```{r}
+# Scatter plot: Proportion of College-Educated Women vs. Infant Mortality Rate
+ggplot(data, aes(x = prop_college, y = IMR_total)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Relationship Between College Education and Infant Mortality Rate",
+       x = "Proportion of Women with College Education",
+       y = "Infant Mortality Rate (per 1,000 births)") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+```
+```{r}
+# Scatterplot of Medicaid coverage vs. Infant Mortality Rate
+ggplot(data, aes(x = prop_medicaid, y = IMR_total)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(
+    title = "Relationship Between Medicaid Birth Coverage and Infant Mortality Rate",
+    x = "Proportion of Medicaid-Covered Births",
+    y = "Infant Mortality Rate (per 1,000 births)"
+  ) +
+  theme_minimal()
+```
+```
+
+
 
 ```{r}
 # Compute and print mean IMR for each Ethnicity group
-mean_IMR <- data_long %>%
+mean_IMR <- IMR_long %>%
   group_by(Ethnicity) %>%
   summarise(Mean_IMR = mean(IMR, na.rm = TRUE))
 
-# Print the results
-print(mean_IMR)
+mean_FR <- FR_long %>%
+  group_by(Ethnicity) %>%
+  summarise(Mean_FR = mean(FR, na.rm = TRUE))
+
+mean_IMR
+mean_FR
 ```
+```{r}
+plot(FR_long$FR, IMR_long$IMR)
+```
+
+
+```{r}
+plot(mean_FR$Mean_FR[1:4], mean_IMR$Mean_IMR[1:4])
+```
+
+
 
 # Sub-question 1
 ```{r}
