@@ -126,7 +126,6 @@ data <- mortality %>%
 data <- data %>%
   select(-ends_with("_f"))
 
-# Rename columns by removing "_m" suffix from mortality dataset
 colnames(data) <- str_replace_all(colnames(data), "_m$", "")
 ```
 
@@ -149,9 +148,8 @@ data <- data %>%
     prop_medicaid = births_medicaid / births_total,
     pct_births_age1524 = births_age1524 / births_total,
     pct_births_age2534 = births_age2534 / births_total,
-    pct_births_age3544 = births_age3544 / births_total
+    pct_births_age3544 = births_age3544 / births_total,
   )
-
 ```
 
 Explain what we did to the dataset and why. Explain the new variables we made
@@ -227,7 +225,39 @@ p3 <- ggplot(data, aes(x = pct_births_age3544, y = IMR_total)) +
 
 p1 / p2 / p3
 ```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Linear regressions for each group
+lm_1524 <- lm(IMR_total ~ pct_births_age1524, data = data)
+lm_2534 <- lm(IMR_total ~ pct_births_age2534, data = data)
+lm_3544 <- lm(IMR_total ~ pct_births_age3544, data = data)
+
+# Get regression slopes
+slope_1524 <- coef(lm_1524)[2]
+slope_2534 <- coef(lm_2534)[2]
+slope_3544 <- coef(lm_3544)[2]
+
+# Correlations
+cor_1524 <- cor(data$pct_births_age1524, data$IMR_total, use = "complete.obs")
+cor_2534 <- cor(data$pct_births_age2534, data$IMR_total, use = "complete.obs")
+cor_3544 <- cor(data$pct_births_age3544, data$IMR_total, use = "complete.obs")
+
+# Create summary data frame (Correlation + Regression Slope only)
+age_summary <- data.frame(
+  `Age Group` = c("15-24", "25-34", "35-44"),
+  `Correlation (r)` = round(c(cor_1524, cor_2534, cor_3544), 3),
+  `Regression Slope` = round(c(slope_1524, slope_2534, slope_3544), 3)
+)
+
+age_summary
+```
 From the graph above we can see that for mothers that are on the younger side, 15-24, has a positive correlation with IMR (Infant Mortality Rate). This suggests that states with higher proportions of births to younger mothers tend to experience higher infant mortality rates. While mothers that are aged 25-34 and 35-44 both have a negative correlation to IMR, indicating that a higher proportion of births in these older maternal agre groups is associated with lower infant mortality rates. This now leads us to the question, what are the factors between older and younger woman that affects the infant mortality rate? This can be attributed to the 15-24 age group having struggles accessing healthcare services, possibly a lower socioeconomic status, higher rates of unintended pregnancies, and potential lack of education pertaining to an infants health and practices.
+
+Age Group | Correlation R | Regression Slope
+---|---|---|
+15-24 | 0.733 | 15.087 |  
+25-34 | -0.428 | -19.495 |
+35-44 | -0.719 | -20.005 |
 
 ## Proportion of Births by College-Educated Mothers vs IMR 
 
