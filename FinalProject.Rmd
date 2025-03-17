@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -125,8 +125,6 @@ data <- data %>%
 
 # Rename columns by removing "_m" suffix from mortality dataset
 colnames(data) <- str_replace_all(colnames(data), "_m$", "")
-
-data
 ```
 
 
@@ -151,7 +149,6 @@ data <- data %>%
     pct_births_age3544 = births_age3544 / births_total
   )
 
-data
 ```
 
 
@@ -207,18 +204,6 @@ p1 / p2 / p3
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Scatter plot: Proportion of Married Women vs. Infant Mortality Rate
-ggplot(data, aes(x = prop_married, y = IMR_total)) +
-  geom_point(alpha = 0.6, color = "darkblue") +
-  geom_smooth(method = "lm", se = TRUE, color = "red") +
-  labs(title = "Relationship Between Marriage Rate and Infant Mortality Rate",
-       x = "Proportion of Married Women",
-       y = "Infant Mortality Rate (per 1,000 births)") +
-  theme_minimal() +
-  theme(text = element_text(size = 14))
-```
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Scatter plot: Proportion of College-Educated Women vs. Infant Mortality Rate
 ggplot(data, aes(x = prop_college, y = IMR_total)) +
   geom_point(alpha = 0.6, color = "darkblue") +
@@ -242,29 +227,4 @@ ggplot(data, aes(x = prop_medicaid, y = IMR_total)) +
   ) +
   theme_minimal()
 ```
-```
 
-
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Compute and print mean IMR for each Ethnicity group
-mean_IMR <- IMR_long %>%
-  group_by(Ethnicity) %>%
-  summarise(Mean_IMR = mean(IMR, na.rm = TRUE))
-
-mean_FR <- FR_long %>%
-  group_by(Ethnicity) %>%
-  summarise(Mean_FR = mean(FR, na.rm = TRUE))
-
-mean_IMR
-mean_FR
-```
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-plot(FR_long$FR, IMR_long$IMR)
-```
-
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-plot(mean_FR$Mean_FR[1:4], mean_IMR$Mean_IMR[1:4])
-```
