@@ -13,6 +13,13 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+
 # Abstract
 This project investigates fertility and infant mortality trends in the United States 
 
@@ -26,3 +33,52 @@ Throughout this report, we will be diving into the question: What demographic fa
 ## Variable Descriptions
 - Variable 1: Description  
 - Variable 2: Description 
+
+## Data Analysis
+```{r}
+mortality <- read_csv('data/infant_mortality_biannual_data.csv')
+fertility <- read_csv('data/fertility_data.csv')
+mortality <- mortality %>%
+  filter(year >= 2016)
+head(mortality)
+head(fertility)
+```
+
+```{r}
+mortality <- mortality %>%
+  mutate(
+    IMR_nhblack = (deaths_nhblack / births_nhblack) * 1000,
+    IMR_nhwhite = (deaths_nhwhite / births_nhwhite) * 1000,
+    IMR_hisp = (deaths_hisp / births_hisp) * 1000,
+    IMR_otherraceeth = (deaths_otherraceeth / births_otherraceeth) * 1000,
+    IMR_total = (deaths_total / births_total) * 1000
+  )
+
+head(mortality)
+```
+
+```{r}
+mortality_long <- mortality %>%
+  pivot_longer(cols = starts_with("IMR_"), 
+               names_to = "Ethnicity", 
+               values_to = "IMR")
+
+# Rename Ethnicity labels for clarity
+mortality_long$Ethnicity <- recode(mortality_long$Ethnicity,
+  "IMR_nhblack" = "Non-Hispanic Black",
+  "IMR_nhwhite" = "Non-Hispanic White",
+  "IMR_hisp" = "Hispanic",
+  "IMR_otherraceeth" = "Other Races/Ethnicities",
+  "IMR_total" = "Total"
+)
+
+# Create scatter plot
+ggplot(mortality_long, aes(x = Ethnicity, y = IMR)) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "blue") +  # Jitter to avoid overlapping points
+  labs(title = "Infant Mortality Rates by Ethnicity",
+       x = "Ethnicity",
+       y = "Infant Mortality Rate (per 1,000 births)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+```
+
