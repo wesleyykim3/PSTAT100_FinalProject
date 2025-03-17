@@ -17,6 +17,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(car)
+library(stats)
 ```
 
 
@@ -38,14 +40,39 @@ Throughout this report, we will be diving into the question: What demographic fa
 ```{r}
 mortality <- read_csv('data/infant_mortality_biannual_data.csv')
 fertility <- read_csv('data/fertility_data.csv')
-mortality <- mortality %>%
-  filter(year >= 2016)
-head(mortality)
-head(fertility)
+
+fertility_agg <- fertility %>%
+  group_by(state, year, group = case_when(
+    bmcode %in% c(1, 2, 3) ~ "H1",  # First half of the year
+    bmcode %in% c(4, 5, 6) ~ "H2"   # Second half of the year
+  )) %>% 
+   summarise(
+    across(starts_with("births_"), sum, na.rm = TRUE), # Summing birth count variables
+    across(starts_with("pop_"), mean, na.rm = TRUE), # Averaging population variables
+    .groups = "drop"
+  ) %>%
+  mutate(bacode = ifelse(group == "H1", 1, 2)) %>%  # Assign bacode after aggregation
+  select(-group)  # Remove temporary grouping variable
+
+
+
+data <- mortality %>%
+  inner_join(fertility_agg, by = c("state", "year", "bacode"), 
+             suffix = c("_m", "_f"))
+
+# Remove duplicate columns (those ending in "_f")
+data <- data %>%
+  select(-ends_with("_f"))
+
+# Rename columns by removing "_m" suffix from mortality dataset
+colnames(data) <- str_replace_all(colnames(data), "_m$", "")
+
+data
 ```
 
+
 ```{r}
-mortality <- mortality %>%
+data <- data %>%
   mutate(
     IMR_nhblack = (deaths_nhblack / births_nhblack) * 1000,
     IMR_nhwhite = (deaths_nhwhite / births_nhwhite) * 1000,
@@ -54,17 +81,17 @@ mortality <- mortality %>%
     IMR_total = (deaths_total / births_total) * 1000
   )
 
-head(mortality)
+data
 ```
 
 ```{r}
-mortality_long <- mortality %>%
+data_long <- data %>%
   pivot_longer(cols = starts_with("IMR_"), 
                names_to = "Ethnicity", 
                values_to = "IMR")
 
 # Rename Ethnicity labels for clarity
-mortality_long$Ethnicity <- recode(mortality_long$Ethnicity,
+data_long$Ethnicity <- recode(data_long$Ethnicity,
   "IMR_nhblack" = "Non-Hispanic Black",
   "IMR_nhwhite" = "Non-Hispanic White",
   "IMR_hisp" = "Hispanic",
@@ -73,12 +100,47 @@ mortality_long$Ethnicity <- recode(mortality_long$Ethnicity,
 )
 
 # Create scatter plot
-ggplot(mortality_long, aes(x = Ethnicity, y = IMR)) +
+ggplot(data_long, aes(x = Ethnicity, y = IMR)) +
   geom_jitter(width = 0.2, alpha = 0.7, color = "blue") +  # Jitter to avoid overlapping points
   labs(title = "Infant Mortality Rates by Ethnicity",
        x = "Ethnicity",
        y = "Infant Mortality Rate (per 1,000 births)") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 15, hjust = 1))
+```
+
+```{r}
+# Compute and print mean IMR for each Ethnicity group
+mean_IMR <- data_long %>%
+  group_by(Ethnicity) %>%
+  summarise(Mean_IMR = mean(IMR, na.rm = TRUE))
+
+# Print the results
+print(mean_IMR)
+```
+
+# Sub-question 1
+```{r}
+birth_comparison_grouped <- data %>%
+  group_by(births_married, births_medicaid) %>%
+  summarise(
+    # Summing birth counts for all ethnicities
+    births_nhblack = sum(births_nhblack, na.rm = TRUE),
+    births_nhwhite = sum(births_nhwhite, na.rm = TRUE),
+    births_hisp = sum(births_hisp, na.rm = TRUE),
+    births_otherraceeth = sum(births_otherraceeth, na.rm = TRUE),
+    births_total = sum(births_total, na.rm = TRUE),
+
+    # Computing birth rates per 1,000 women for each ethnicity
+    birth_rate_nhblack = (sum(births_nhblack, na.rm = TRUE) / sum(pop_nhblack, na.rm = TRUE)) * 1000,
+    birth_rate_nhwhite = (sum(births_nhwhite, na.rm = TRUE) / sum(pop_nhwhite, na.rm = TRUE)) * 1000,
+    birth_rate_hisp = (sum(births_hisp, na.rm = TRUE) / sum(pop_hisp, na.rm = TRUE)) * 1000,
+    birth_rate_otherraceeth = (sum(births_otherraceeth, na.rm = TRUE) / sum(pop_otherraceeth, na.rm = TRUE)) * 1000,
+    birth_rate_total = (sum(births_total, na.rm = TRUE) / sum(pop_total, na.rm = TRUE)) * 1000,
+
+    .groups = "drop"
+  )
+
+birth_comparison_grouped
 ```
 
