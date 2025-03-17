@@ -204,29 +204,3 @@ plot(mean_FR$Mean_FR[1:4], mean_IMR$Mean_IMR[1:4])
 ```
 
 
-
-# Sub-question 1
-```{r}
-birth_comparison_grouped <- data %>%
-  group_by(births_married, births_medicaid) %>%
-  summarise(
-    # Summing birth counts for all ethnicities
-    births_nhblack = sum(births_nhblack, na.rm = TRUE),
-    births_nhwhite = sum(births_nhwhite, na.rm = TRUE),
-    births_hisp = sum(births_hisp, na.rm = TRUE),
-    births_otherraceeth = sum(births_otherraceeth, na.rm = TRUE),
-    births_total = sum(births_total, na.rm = TRUE),
-
-    # Computing birth rates per 1,000 women for each ethnicity
-    birth_rate_nhblack = (sum(births_nhblack, na.rm = TRUE) / sum(pop_nhblack, na.rm = TRUE)) * 1000,
-    birth_rate_nhwhite = (sum(births_nhwhite, na.rm = TRUE) / sum(pop_nhwhite, na.rm = TRUE)) * 1000,
-    birth_rate_hisp = (sum(births_hisp, na.rm = TRUE) / sum(pop_hisp, na.rm = TRUE)) * 1000,
-    birth_rate_otherraceeth = (sum(births_otherraceeth, na.rm = TRUE) / sum(pop_otherraceeth, na.rm = TRUE)) * 1000,
-    birth_rate_total = (sum(births_total, na.rm = TRUE) / sum(pop_total, na.rm = TRUE)) * 1000,
-
-    .groups = "drop"
-  )
-
-birth_comparison_grouped
-```
-
