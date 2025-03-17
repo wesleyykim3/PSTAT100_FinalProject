@@ -1,5 +1,5 @@
 ---
-title: "PSTAT 100 Final Project - Fertility and Infant Mortality 2010 - Present"
+title: "PSTAT 100 Final Project - Fertility and Infant Mortality 2003 - Present"
 author: "Arthur Kim and Wesley Kim"
 date: "March 8th, 2025"
 output: pdf_document
@@ -15,25 +15,90 @@ library(dplyr)
 library(ggplot2)
 library(car)
 library(stats)
+library(patchwork)
 ```
 
-
 # Abstract
-This project investigates fertility and infant mortality trends in the United States 
+This project examines fertility and infant mortality trends in the United States using two datasets spanning from 2003 to 2023. The analysis focuses on understanding how socioeconomic and healthcare-related factors - specifically the mother's education, Medicaid coverage, and maternal age - are associated with infant mortality rates over time. Key variables explored include the proportion of births to mothers with college degrees, proportion of births covered by Medicaid, and the age distribution of mothers at childbirth. We analyzed how these demographic factors correlate with overall infant mortality rates (IMR), revealing potential patterns and disparities in maternal and infant health outcomes. This report aims to offer insights that can help inform health policymakers and promote equity in maternal and child health in the US.
 
 ## Question of Interest
-Throughout this report, we will be diving into the question: What demographic factors are most predictive of high infant mortality rates within the states?
+Throughout this report, we will be diving into the question: What socioeconomic factors are most predictive of high infant mortality rates within the States?
 
 ### Sub-Questions
-- Sub-question 1  
-- Sub-question 2  
+- Sub-question 1: What role does education of the mother play in predicting infant mortality rates?
+- Sub-question 2: How does medicaid coverage influence overall infant mortality rates across states?
+- Sub-question 3: What significance does age of the mother play when compared to infant mortality rates?
 
 ## Variable Descriptions
-- Variable 1: Description  
-- Variable 2: Description 
+
+- state: Which U.S. state infant statistic was taken
+- year: Calender year of the data
+- bmcode: Bimonthly period code (1 = Jan-Feb, 2 = Mar-Apr,...)
+- bacode: Biannual code (1 = First half of the year, 2 = Second half of the year)
+- time: Time period indicator
+- start_date: Starting date of the observation period, typically the same as the time variable
+- end_date: Ending date of the observation period
+
+## Population Statistics 
+- pop_total: Total population in the area
+
+- pop_nhblack: population of Non-Hispanic Black women age 15-44
+- pop_nhwhite: population Non-Hispanic White women age 15-44
+- pop_hisp: population of Hispanic women age 15-54 population
+- pop_otherraceeth: Other races/ethnicities women age 15-54 population
+- births_nhblack: Births to non-Hispanic Black mothers
+- births_nhwhite: Births to non-Hispanic White mothers
+- births_hisp: Births to Hispanic mothers
+- births_otherraceeth: Births to mothers of other races/ethnicities
+- births_total: Total births across all categories
+
+## By Insurance:
+
+- pop_medicaid: Population covered by Medicaid (women age 15-54 population)
+- pop_nonmedicaid: Population not covered by Medicaid (women age 15-54 population)
+- births_medicaid: Births covered by Medicaid
+- births_nonmedicaid: Births not covered by Medicaid
+
+## By Education:
+
+- pop_nohs: Population without high school education (women age 15-54 population)
+- pop_hs: Population with high school education (women age 15-54 population)
+- pop_somecoll: Population with some college education (women age 15-54 population)
+- pop_coll: Population with college degree (women age 15-54 population)
+- births_nohs: Births to mothers without high school education
+- births_hs: Births to mothers with high school education
+- births_somecoll: Births to mothers with some college education
+- births_coll: Births to mothers with college degree
+
+## By Marital Status:
+
+- pop_married: Married population (women age 15-54 population)
+- pop_unmarried: Unmarried population (women age 15-54 population)
+- births_married: Births to married mothers
+- births_unmarried: Births to unmarried mothers
+
+## By Age:
+
+- births_age1524: Births to mother ages 15-24
+- births_age2534: Births to mother ages 25-34
+- births_age3544: Births to mother ages 35-44
+- pop_age1524: Population aged 15-24 (women age 15-54 population)
+- pop_age2534: Population aged 25-34 (women age 15-54 population)
+- pop_age3544: Population aged 35-44 (women age 15-54 population)
+
+## Mortality
+
+- deaths_nhblack: Number of deaths among non-Hispanic Black population
+- deaths_nhwhite: Number of deaths among non-Hispanic White population
+- deaths_hisp: Number of deaths among Hispanic population of any race
+- deaths_otherraceeth: Number of deaths among other racial/ethnic groups
+- deaths_con: Number of congenital-related deaths (present at birth)
+- deaths_noncon: Number of non-congenital deaths
+- deaths_neo: Number of neonatal deaths (within first 28 days of life)
+- deaths_total: Total number of deaths across all categories
 
 ## Data Analysis
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 mortality <- read_csv('data/infant_mortality_biannual_data.csv', show_col_types = FALSE)
 fertility <- read_csv('data/fertility_data.csv', show_col_types = FALSE)
 
@@ -65,7 +130,7 @@ data
 ```
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 data <- data %>%
   mutate(
     IMR_nhblack = (deaths_nhblack / births_nhblack) * 1000,
@@ -91,7 +156,7 @@ data
 
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Pivot IMR data to long format
 IMR_long <- data %>%
   pivot_longer(cols = starts_with("IMR_"), 
@@ -115,9 +180,8 @@ ggplot(IMR_long, aes(x = Ethnicity, y = IMR)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 15, hjust = 1))
 ```
-```{r}
-library(patchwork)
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 p1 <- ggplot(data, aes(x = pct_births_age1524, y = IMR_total)) +
   geom_point(color = "darkgreen", alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
@@ -142,7 +206,7 @@ p1 / p2 / p3
 ```
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Scatter plot: Proportion of Married Women vs. Infant Mortality Rate
 ggplot(data, aes(x = prop_married, y = IMR_total)) +
   geom_point(alpha = 0.6, color = "darkblue") +
@@ -154,7 +218,7 @@ ggplot(data, aes(x = prop_married, y = IMR_total)) +
   theme(text = element_text(size = 14))
 ```
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Scatter plot: Proportion of College-Educated Women vs. Infant Mortality Rate
 ggplot(data, aes(x = prop_college, y = IMR_total)) +
   geom_point(alpha = 0.6, color = "darkblue") +
@@ -165,7 +229,8 @@ ggplot(data, aes(x = prop_college, y = IMR_total)) +
   theme_minimal() +
   theme(text = element_text(size = 14))
 ```
-```{r}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Scatterplot of Medicaid coverage vs. Infant Mortality Rate
 ggplot(data, aes(x = prop_medicaid, y = IMR_total)) +
   geom_point(alpha = 0.6, color = "darkblue") +
@@ -181,7 +246,7 @@ ggplot(data, aes(x = prop_medicaid, y = IMR_total)) +
 
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Compute and print mean IMR for each Ethnicity group
 mean_IMR <- IMR_long %>%
   group_by(Ethnicity) %>%
@@ -194,13 +259,12 @@ mean_FR <- FR_long %>%
 mean_IMR
 mean_FR
 ```
-```{r}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 plot(FR_long$FR, IMR_long$IMR)
 ```
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 plot(mean_FR$Mean_FR[1:4], mean_IMR$Mean_IMR[1:4])
 ```
-
-
