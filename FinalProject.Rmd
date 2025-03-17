@@ -41,7 +41,6 @@ Throughout this report, we will be diving into the question: What socioeconomic 
 
 ## Population Statistics 
 - pop_total: Total population in the area
-
 - pop_nhblack: population of Non-Hispanic Black women age 15-44
 - pop_nhwhite: population Non-Hispanic White women age 15-44
 - pop_hisp: population of Hispanic women age 15-54 population
@@ -151,7 +150,10 @@ data <- data %>%
 
 ```
 
+Explain what we did to the dataset and why. Explain the new variblbes we made
 
+
+## Infant Mortality Rates by Ethnicity
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Pivot IMR data to long format
@@ -178,6 +180,9 @@ ggplot(IMR_long, aes(x = Ethnicity, y = IMR)) +
   theme(axis.text.x = element_text(angle = 15, hjust = 1))
 ```
 
+
+## Proportion of Births by Different Maternal Age Groups vs IMR 
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 p1 <- ggplot(data, aes(x = pct_births_age1524, y = IMR_total)) +
   geom_point(color = "darkgreen", alpha = 0.6) +
@@ -203,6 +208,8 @@ p1 / p2 / p3
 ```
 
 
+## Proportion of Births by College-Educated Mothers vs IMR 
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Scatter plot: Proportion of College-Educated Women vs. Infant Mortality Rate
 ggplot(data, aes(x = prop_college, y = IMR_total)) +
@@ -214,6 +221,9 @@ ggplot(data, aes(x = prop_college, y = IMR_total)) +
   theme_minimal() +
   theme(text = element_text(size = 14))
 ```
+
+
+## Proportion of Births with Medicaid Birth Coverage vs IMR 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Scatterplot of Medicaid coverage vs. Infant Mortality Rate
