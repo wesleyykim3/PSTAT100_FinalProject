@@ -106,32 +106,34 @@ Throughout this report, we will be diving into the question:
 mortality <- read_csv('data/infant_mortality_biannual_data.csv', show_col_types = FALSE)
 fertility <- read_csv('data/fertility_data.csv', show_col_types = FALSE)
 
+# recoding and aggregating the fertility datset
 fertility_agg <- fertility %>%
   group_by(state, year, group = case_when(
-    bmcode %in% c(1, 2, 3) ~ "H1",  # First half of the year
-    bmcode %in% c(4, 5, 6) ~ "H2"   # Second half of the year
+    bmcode %in% c(1, 2, 3) ~ "H1",
+    bmcode %in% c(4, 5, 6) ~ "H2"   
   )) %>% 
    summarise(
-    across(starts_with("births_"), sum, na.rm = TRUE), # Summing birth count variables
-    across(starts_with("pop_"), mean, na.rm = TRUE), # Averaging population variables
+    across(starts_with("births_"), sum, na.rm = TRUE),
+    across(starts_with("pop_"), mean, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  mutate(bacode = ifelse(group == "H1", 1, 2)) %>%  # Assign bacode after aggregation
-  select(-group)  # Remove temporary grouping variable
+  mutate(bacode = ifelse(group == "H1", 1, 2)) %>%  
+  select(-group)
 
+# joining the 2 datasets
 data <- mortality %>%
   inner_join(fertility_agg, by = c("state", "year", "bacode"), 
              suffix = c("_m", "_f"))
 
-# Remove duplicate columns (those ending in "_f")
+# removing duplicate columns and naming appropriately
 data <- data %>%
   select(-ends_with("_f"))
-
 colnames(data) <- str_replace_all(colnames(data), "_m$", "")
 ```
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# adding new columns for data analysis
 data <- data %>%
   mutate(
     IMR_nhblack = (deaths_nhblack / births_nhblack) * 1000,
@@ -160,8 +162,9 @@ Next, we used mutate to create new columns, including total infant mortality rat
 Next, we pivoted the dataset into a long format to facilitate visualization and analysis of infant mortality rates (IMR) across different ethnic groups. The original dataset stored IMR values in separate columns for each racial/ethnic group (e.g., IMR_nhblack, IMR_nhwhite, IMR_hisp). To make this data easier to work with, we used pivot_longer() to convert these multiple IMR columns into two columns: one for Ethnicity and another for IMR values. This restructuring allowed us to analyze IMR trends more efficiently and create clearer visualizations. To improve readability, we also renamed the ethnicity categories from their original variable names to more intuitive labels (e.g., "IMR_nhblack" was changed to "Non-Hispanic Black"). This transformation made it easier to compare IMR across racial and ethnic groups while preparing the dataset for further statistical analysis and visualization. With this long-format dataset, we were able to create our first plot, illustrating the distribution of IMR across different demographic groups.
 
 ## Infant Mortality Rates by Ethnicity
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Pivot IMR data to long format
+# pivot IMR data to long format
 IMR_long <- data %>%
   pivot_longer(cols = starts_with("IMR_"), 
                names_to = "Ethnicity", 
@@ -172,16 +175,15 @@ IMR_long <- data %>%
     Ethnicity == "IMR_hisp" ~ "Hispanic",
     Ethnicity == "IMR_otherraceeth" ~ "Other Races/Ethnicities",
     Ethnicity == "IMR_total" ~ "Total",
-    TRUE ~ Ethnicity  # Keeps any unexpected values unchanged
+    TRUE ~ Ethnicity  
   ))
 
 IMR_long <- IMR_long[IMR_long$Ethnicity != "Total", , drop = FALSE]
 
-# Create scatter plot for IMR by Ethnicity
+# plot for IMR by Ethnicity
 ggplot(IMR_long, aes(x = Ethnicity, y = IMR)) +
-  geom_jitter(width = 0.2, alpha = 0.7, color = "blue") +  # Jitter to avoid overlapping points
-  labs(title = "Infant Mortality Rates by Ethnicity",
-       x = "Ethnicity",
+  geom_jitter(width = 0.2, alpha = 0.7, color = "blue") +  # jitter to avoid overlapping points
+  labs(x = "Ethnicity",
        y = "Infant Mortality Rate (per 1,000 births)") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 15, hjust = 1))
@@ -208,9 +210,18 @@ Other Races/Ethnicity | 4.47 | 2.65 |
 When looking through the documentation, it states that the mean IMR for the states is around 5.6. Based on that we see that the Hispanic population is only slightly over, the Non-Hispanic White and other races are a good amount below. However we can see that in the numbers, Non-Hispanic Blacks have 11.97 which is significantly higher than the national average but has the highest standard deviation implying that there are extreme ends. This does not mean just because you have a Non-Hispanic black mother, the infant has a higher chance of mortality. This might show that non-Hispanic Black mothers are being effected by other factors such as education, healthcare access, etc that could be making this number higher. Now we will look into these possible factors.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# pairwise t test
 pairwise_results <- pairwise.t.test(IMR_long$IMR, IMR_long$Ethnicity, p.adjust.method = "bonferroni")
 
-pairwise_results
+pairwise_pvalues <- data.frame(
+  Group1 = c("Non-Hispanic Black", "Non-Hispanic White", "Other Races/Ethnicities"),
+  Hispanic = c("< 2e-16", "4.2e-16", "< 2e-16"),
+  `Non-Hispanic Black` = c("-", "< 2e-16", "< 2e-16"),
+  `Non-Hispanic White` = c("-", "-", "0.59")
+)
+
+# Format and display as a kable table
+kable(pairwise_pvalues)
 ```
 
 The pairwise t test shows that there is a statistically significant difference between all of the ethnic groups except Non-Hispanic White and Other Races/Ethnicities. This shows that ethnicity is a statistically significant predictor of IMR.
@@ -218,20 +229,21 @@ The pairwise t test shows that there is a statistically significant difference b
 ## Proportion of Births by Different Maternal Age Groups vs IMR 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# plot for 15-24
 p1 <- ggplot(data, aes(x = pct_births_age1524, y = IMR_total)) +
   geom_point(color = "darkgreen", alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
   labs(title = "Age 15-24", x = "Proportion of Births", y = "IMR") +
   theme_minimal()
 
-# Plot for 25-34
+# plot for 25-34
 p2 <- ggplot(data, aes(x = pct_births_age2534, y = IMR_total)) +
   geom_point(color = "steelblue", alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
   labs(title = "Age 25-34", x = "Proportion of Births", y = "IMR") +
   theme_minimal()
 
-# Plot for 35-44
+# plot for 35-44
 p3 <- ggplot(data, aes(x = pct_births_age3544, y = IMR_total)) +
   geom_point(color = "purple", alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
@@ -242,7 +254,7 @@ p1 / p2 / p3
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# linear regressions
+# linear models
 lm_1524 <- lm(IMR_total ~ pct_births_age1524, data = data)
 lm_2534 <- lm(IMR_total ~ pct_births_age2534, data = data)
 lm_3544 <- lm(IMR_total ~ pct_births_age3544, data = data)
@@ -278,17 +290,15 @@ We calculate two variables, correlation R which measures the strength and direct
 ## Proportion of Births by College-Educated Mothers vs IMR 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Scatter plot: Proportion of College-Educated Women vs. Infant Mortality Rate
+# plot for college education vs IMR
 ggplot(data, aes(x = prop_college, y = IMR_total)) +
   geom_point(alpha = 0.6, color = "darkblue") +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
-  labs(title = "Relationship Between College Education and Infant Mortality Rate",
-       x = "Proportion of Women with College Education",
+  labs(x = "Proportion of Women with College Education",
        y = "Infant Mortality Rate (per 1,000 births)") +
   theme_minimal()
 
 lm_college <- lm(IMR_total ~ prop_college, data = data)
-# summary(lm_college)
 ```
 
 Another major factor that we investigated was education among woman has a significant correlation with the infant mortality rate. As shown in the graph above, we see that there is a negative correlation between IMF and proportion of women with college education. This graph is showing us that as the proportion of women with some or completed college education increases, the IMF decreases. This is not meaning that woman who did not go to college are causing higher rates, it could be more that those woman who are in positions to be receiving a college education tend to have lower IMR.
@@ -303,39 +313,32 @@ The regression table above provides evidence supporting the negative relationshi
 ## Proportion of Births with Medicaid Birth Coverage vs IMR 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Scatterplot of Medicaid coverage vs. Infant Mortality Rate
+# plot for Medicaid vs IMR
 ggplot(data, aes(x = prop_medicaid, y = IMR_total)) +
   geom_point(alpha = 0.6, color = "darkblue") +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
-  labs(
-    title = "Relationship Between Medicaid Birth Coverage and Infant Mortality Rate",
-    x = "Proportion of Medicaid-Covered Births",
-    y = "Infant Mortality Rate (per 1,000 births)"
+  labs(x = "Proportion of Medicaid-Covered Births",
+       y = "Infant Mortality Rate (per 1,000 births)"
   ) +
   theme_minimal()
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# linear model
 model <- lm(IMR_total ~ prop_medicaid, data = data)
-model_summary <- summary(model)$coefficients  # Extract coefficients matrix
+model_summary <- summary(model)$coefficients 
 model_df <- data.frame(
-  Predictor = rownames(model_summary),    # Get predictor names
-  Coefficient = model_summary[, "Estimate"],   # Extract coefficient estimates
+  Predictor = rownames(model_summary),    
+  Coefficient = model_summary[, "Estimate"],   
   `P-Value` = formatC(model_summary[, "Pr(>|t|)"], format = "e", digits = 2)
 )
-kable(model_df, caption = "Regression Model Coefficients", digits = 3)
+kable(model_df, digits = 3)
 ```
 
 The graph illustrates a strong positive correlation between the proportion of Medicaid-covered births and infant mortality rates (IMR) across states. The linear regression model indicates that for each 1% increase in Medicaid-covered births, the IMR increases by 0.06785 per 1,000 births. This relationship is highly statistically significant, with a p-value of 2.25e-33, confirming that Medicaid coverage is a key predictor of IMR.
 
 At first glance, one might expect higher Medicaid coverage to be associated with lower infant mortality rates, given that Medicaid provides access to healthcare for low-income individuals. However, it is important to recognize that Medicaid primarily serves economically disadvantaged populations, who may already face higher health risks due to limited prenatal care access, higher rates of preterm births, and other socioeconomic stressors. Thus, rather than Medicaid causing higher IMR, the correlation likely reflects underlying disparities in maternal and infant health outcomes among lower-income groups.
 
-\bigskip
-\bigskip
-\bigskip
-\bigskip
-\bigskip
-\bigskip
 
 # Summary of Findings and Discussion
 
