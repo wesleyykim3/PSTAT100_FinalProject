@@ -330,6 +330,12 @@ The graph illustrates a strong positive correlation between the proportion of Me
 
 At first glance, one might expect higher Medicaid coverage to be associated with lower infant mortality rates, given that Medicaid provides access to healthcare for low-income individuals. However, it is important to recognize that Medicaid primarily serves economically disadvantaged populations, who may already face higher health risks due to limited prenatal care access, higher rates of preterm births, and other socioeconomic stressors. Thus, rather than Medicaid causing higher IMR, the correlation likely reflects underlying disparities in maternal and infant health outcomes among lower-income groups.
 
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
 
 # Summary of Findings and Discussion
 
