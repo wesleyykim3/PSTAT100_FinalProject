@@ -160,7 +160,6 @@ Next, we used mutate to create new columns, including total infant mortality rat
 Next, we pivoted the dataset into a long format to facilitate visualization and analysis of infant mortality rates (IMR) across different ethnic groups. The original dataset stored IMR values in separate columns for each racial/ethnic group (e.g., IMR_nhblack, IMR_nhwhite, IMR_hisp). To make this data easier to work with, we used pivot_longer() to convert these multiple IMR columns into two columns: one for Ethnicity and another for IMR values. This restructuring allowed us to analyze IMR trends more efficiently and create clearer visualizations. To improve readability, we also renamed the ethnicity categories from their original variable names to more intuitive labels (e.g., "IMR_nhblack" was changed to "Non-Hispanic Black"). This transformation made it easier to compare IMR across racial and ethnic groups while preparing the dataset for further statistical analysis and visualization. With this long-format dataset, we were able to create our first plot, illustrating the distribution of IMR across different demographic groups.
 
 ## Infant Mortality Rates by Ethnicity
-
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Pivot IMR data to long format
 IMR_long <- data %>%
@@ -175,6 +174,8 @@ IMR_long <- data %>%
     Ethnicity == "IMR_total" ~ "Total",
     TRUE ~ Ethnicity  # Keeps any unexpected values unchanged
   ))
+
+IMR_long <- IMR_long[IMR_long$Ethnicity != "Total", , drop = FALSE]
 
 # Create scatter plot for IMR by Ethnicity
 ggplot(IMR_long, aes(x = Ethnicity, y = IMR)) +
@@ -194,6 +195,7 @@ IMR_summary <- IMR_long %>%
   )
 ```
 
+
 When we first look at the data and compare within different ethnic groups we see that generally Non-Hispanic Black mothers have a higher infant mortality rate compared to the other ethnic groups. The other ethnicities have a generally lower IMF. 
 
 Ethnic Group | Mean IMR | Standard Deviation IMR
@@ -203,7 +205,15 @@ Non-Hispanic Black | 11.97 | 3.24 |
 Non-Hispanic White | 4.72 | 1.16 |
 Other Races/Ethnicity | 4.47 | 2.65 |
 
-When looking through the documentation, it states that the mean IMR for the states is around 5.6. Based on that we see that the Hispanic population is only slightly over, the Non-Hispanic White and other races are a good amount below. However we can see that in the numbers, Non-Hispanic Blacks have 11.97 which is significantly higher than the national average but has the highest standard deviation implying that their are extreme ends. This does not mean just because you have a Non-Hispanic black mother, the infant has a higher chance of mortality. This might show that non-Hispanic Black mothers are being effected by other factors such as education, healthcare access, etc that could be making this number higher. Now we will look into these possible factors.
+When looking through the documentation, it states that the mean IMR for the states is around 5.6. Based on that we see that the Hispanic population is only slightly over, the Non-Hispanic White and other races are a good amount below. However we can see that in the numbers, Non-Hispanic Blacks have 11.97 which is significantly higher than the national average but has the highest standard deviation implying that there are extreme ends. This does not mean just because you have a Non-Hispanic black mother, the infant has a higher chance of mortality. This might show that non-Hispanic Black mothers are being effected by other factors such as education, healthcare access, etc that could be making this number higher. Now we will look into these possible factors.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+pairwise_results <- pairwise.t.test(IMR_long$IMR, IMR_long$Ethnicity, p.adjust.method = "bonferroni")
+
+pairwise_results
+```
+
+The pairwise t test shows that there is a statistically significant difference between all of the ethnic groups except Non-Hispanic White and Other Races/Ethnicities. This shows that ethnicity is a statistically significant predictor of IMR.
 
 ## Proportion of Births by Different Maternal Age Groups vs IMR 
 
@@ -324,13 +334,13 @@ At first glance, one might expect higher Medicaid coverage to be associated with
 
 # Summary of Findings and Discussion
 
-This study explored the relationship between key socioeconomic and healthcare-related factors and infant mortality rates (IMR) across U.S. states between 2003 and 2023. Using two large datasets covering fertility and infant mortality statistics, we investigated how maternal age, educational attainment, and Medicaid coverage are associated with variations in IMR. Our goal was to identify demographic and structural predictors of infant mortality in order to better understand disparities in maternal and child health outcomes.
+This study explored the relationship between key socioeconomic and healthcare-related factors and infant mortality rates (IMR) across U.S. states between 2003 and 2023. Using two large datasets covering fertility and infant mortality statistics, we investigated how ethnicity, maternal age, educational attainment, and Medicaid coverage are associated with variations in IMR. Our goal was to identify demographic and structural predictors of infant mortality in order to better understand disparities in maternal and child health outcomes.
 
-One of the most significant findings is the strong association between maternal education and infant mortality. Our analysis demonstrated a clear negative correlation between the proportion of women with some or completed college education and IMR. Specifically, the linear regression model revealed a slope of -11.97, indicating that for every one-unit increase in the proportion of college-educated women, the IMR decreased by approximately 12 deaths per 1,000 live births. The statistical significance of this result, reflected in a p-value of less than 2e-16, provides compelling evidence that education plays a crucial role in improving infant health outcomes. However, it is important to emphasize that this relationship likely reflects underlying differences in access to healthcare, health literacy, and socioeconomic status. Women with higher education levels may have better access to prenatal care, healthier living conditions, and stronger social support systems, all of which can contribute to reduced infant mortality.
+One of the most significant findings is the strong association between maternal education and infant mortality. Our analysis demonstrated a clear negative correlation between the proportion of women with some or completed college education and IMR. Specifically, the linear regression model revealed a slope of -11.97, indicating that for every percent increase of college-educated women, the IMR decreased by 0.1197 deaths per 1,000 births. The statistical significance of this result, reflected in a p-value of less than 2e-16, provides compelling evidence that education plays a crucial role in improving infant health outcomes. However, it is important to emphasize that this relationship likely reflects underlying differences in access to healthcare, health literacy, and socioeconomic status. Women with higher education levels may have better access to prenatal care, healthier living conditions, and stronger social support systems, all of which can contribute to reduced infant mortality.
 
 We also analyzed the role of maternal age distribution in relation to IMR. Our findings show that births to younger mothers (ages 15-24) are associated with higher IMR, while births to mothers aged 25-34 and 35-44 are associated with lower IMR. The correlation for the 15-24 age group was positive (r = 0.733), with a regression slope of 15.087, suggesting that as the proportion of births to younger mothers increases, the IMR also rises significantly. In contrast, the 25-34 and 35-44 age groups exhibited negative correlations (r = -0.428 and -0.719, respectively), with corresponding negative regression slopes. These results are consistent with existing literature that identifies young maternal age as a risk factor for adverse infant health outcomes. Younger mothers may have less financial stability, limited education, and reduced access to healthcare resources, which can increase the risk of complications during pregnancy and infancy. Older mothers, particularly those between 25 and 34 years old, are generally at an optimal age for childbirth, often benefitting from greater financial and social stability as well as more comprehensive access to healthcare services.
 
-Another major finding of this study concerns Medicaid coverage. Our regression analysis identified a statistically significant positive relationship between the proportion of births covered by Medicaid and IMR. The model estimated that each 1% increase in Medicaid-covered births corresponds to an increase of approximately 0.06785 deaths per 1,000 live births in IMR, with a highly significant p-value of 2.25e-33. At first glance, this relationship may appear counterintuitive, as Medicaid is intended to provide healthcare access to economically disadvantaged groups, potentially improving outcomes. However, it is critical to interpret this finding in context. Medicaid coverage is often a proxy for lower socioeconomic status, which correlates with higher health risks, including limited access to quality prenatal care, higher rates of chronic conditions, and increased exposure to environmental and social stressors. Thus, the observed relationship may reflect systemic inequalities rather than the direct impact of Medicaid itself. Medicaid provides vital support to populations who may otherwise lack healthcare access, but structural barriers and disparities continue to drive differences in infant mortality outcomes among Medicaid recipients.
+Another major finding of this study concerns Medicaid coverage. Our regression analysis identified a statistically significant positive relationship between the proportion of births covered by Medicaid and IMR. The model estimated that each percent increase in Medicaid-covered births corresponds to an increase of approximately 0.06785 deaths per 1,000 live births in IMR, with a highly significant p-value of 2.25e-33. At first glance, this relationship may appear counterintuitive, as Medicaid is intended to provide healthcare access to economically disadvantaged groups, potentially improving outcomes. However, it is critical to interpret this finding in context. Medicaid coverage is often a proxy for lower socioeconomic status, which correlates with higher health risks, including limited access to quality prenatal care, higher rates of chronic conditions, and increased exposure to environmental and social stressors. Thus, the observed relationship may reflect systemic inequalities rather than the direct impact of Medicaid itself. Medicaid provides vital support to populations who may otherwise lack healthcare access, but structural barriers and disparities continue to drive differences in infant mortality outcomes among Medicaid recipients.
 
 In summary, our findings suggest that higher maternal education, optimal maternal age (25-34 years), and addressing socioeconomic disparities are critical factors in reducing infant mortality rates. The positive association between Medicaid coverage and IMR underscores the need for comprehensive policy solutions that address the broader social determinants of health, rather than relying solely on healthcare coverage as a solution. Policymakers should prioritize expanding educational opportunities for women, improving access to high-quality prenatal and postnatal care, and addressing socioeconomic inequalities to reduce infant mortality rates across all demographic groups.
 
