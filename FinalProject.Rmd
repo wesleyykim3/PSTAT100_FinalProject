@@ -263,7 +263,6 @@ age_summary <- data.frame(
   `Regression Slope` = round(c(slope_1524, slope_2534, slope_3544), 3)
 )
 
-age_summary
 ```
 
 From the graph above we can see that for mothers that are on the younger side, 15-24, has a positive correlation with IMR (Infant Mortality Rate). This suggests that states with higher proportions of births to younger mothers tend to experience higher infant mortality rates. While mothers that are aged 25-34 and 35-44 both have a negative correlation to IMR, indicating that a higher proportion of births in these older maternal age groups is associated with lower infant mortality rates. This now leads us to the question, what are the factors between older and younger woman that affects the infant mortality rate? This can be attributed to the 15-24 age group having struggles accessing healthcare services, possibly a lower socioeconomic status, higher rates of unintended pregnancies, and potential lack of education pertaining to an infants health and practices.
